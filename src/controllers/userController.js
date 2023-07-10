@@ -4,13 +4,12 @@ const { successResponse } = require('./responseController');
 const { findWithId } = require('../services/findWithId');
 const { deleteImage } = require('../helpers/deleteImage');
 const { createJSONWebToken } = require('../helpers/jsonwebtoken');
-const { jwtActivationKey, clientUrl } = require('../secret');
+const { jwtActivationKey, clientUrl, jwtResetPasswordKey } = require('../secret');
 const emailWithNodeMail = require('../helpers/email');
 // const fs = require('fs').promises;
 const jwt = require('jsonwebtoken');
-
-
-
+const bcrypts = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 const getUsers= async(req,res,next)=>{
     try{
@@ -108,6 +107,7 @@ const deleteUserById = async (req,res,next)=>{
 const processRegister = async (req,res,next)=>{
     try {
        const {name,email,password,phone,address} = req.body;
+       console.log(name)
        
        const image =req.file;
 
@@ -127,7 +127,8 @@ const processRegister = async (req,res,next)=>{
         throw createError(409,'user with this email already registered')
        }
 
-       const token=createJSONWebToken({name,email,password,phone,address,image:imageBUfferString},jwtActivationKey,'10m');
+       const token=createJSONWebToken(
+        {name,email,password,phone,address,image:imageBUfferString},jwtActivationKey,'10m');
        console.log(token);
 
        //PREPARE EMAIL
@@ -137,8 +138,7 @@ const processRegister = async (req,res,next)=>{
         html:`
             <h2>Hello ${name} !</h2> 
             <p>please click here to <a href="${clientUrl}/api/users/activate/${token} target="_blank"">activate your account<a></p>
-        `
-       }
+        `}
 
        //send email with nodemailer
       try {
@@ -180,9 +180,7 @@ const activateUserAccount = async (req,res,next)=>{
         return successResponse(res,{
             statusCode:201,
             message:"user registered successfuy",
-            
-           
-        })
+            })
 
       } catch (error) {
 
@@ -194,14 +192,8 @@ const activateUserAccount = async (req,res,next)=>{
         } else{
             throw error;
         }
-        
-      }
-
-
-       
-    } catch (error) {
-        
-        next(error)
+    } } catch (error) {
+         next(error)
     }
 };
 
@@ -210,7 +202,7 @@ const updateUserById = async (req,res,next)=>{
         const userId = req.params.id;
 
         const options ={password:0}
-         await findWithId(User,userId,options).select("-password");
+         await findWithId(User,userId,options).select('-password');
 
         const updateOptions ={new: true, runValidators: true,
             context:'query'}
@@ -237,7 +229,8 @@ const updateUserById = async (req,res,next)=>{
 
         // delete.updates.email;
 
-        const updateUser = await User.findByIdAndUpdate(userId, updates, updateOptions)
+        const updateUser = await User.findByIdAndUpdate(
+            userId, updates, updateOptions).select('-password')
 
         if(!updateUser){
             
@@ -257,4 +250,149 @@ const updateUserById = async (req,res,next)=>{
     }
 }
 
-module.exports ={getUsers,getUserById,deleteUserById, processRegister,activateUserAccount,updateUserById};
+const handleBanUserById = async (req,res,next)=>{ 
+    try {
+        const userId = req.params.id;
+        await findWithId(User,userId);
+        const updates ={isBanned:true};
+        const updateOptions ={new: true, runValidators: true,
+            context:'query'};
+            
+        
+        // delete.updates.email;
+
+        const updateUser = await User.findByIdAndUpdate(
+            userId,
+            updates,    //{isBanned:true}
+            updateOptions).select('-password');
+
+        if(!updateUser){
+            
+                throw createError(400,'user was not banned successfully')
+            }
+
+    return successResponse(res,{
+            statusCode:200,
+            message:'user was banned successfully',
+           })
+    } catch (error) {
+        
+        next(error)
+    }
+};
+
+const handleUnbanUserById = async (req,res,next)=>{ 
+    try {
+        const userId = req.params.id;
+        await findWithId(User,userId);
+        const updates ={isBanned:false};
+        const updateOptions ={new: true, runValidators: true,
+            context:'query'};
+            
+        
+        // delete.updates.email;
+
+        const updateUser = await User.findByIdAndUpdate(
+            userId,
+            updates,    //{isBanned:true}
+            updateOptions).select('-password');
+
+        if(!updateUser){
+            
+                throw createError(400,'user was not unbanned successfully')
+            }
+
+    return successResponse(res,{
+            statusCode:200,
+            message:'user was unbanned successfully',
+           })
+    } catch (error) {
+        
+        next(error)
+    }
+};
+
+const handleUpdatePassword = async (req,res,next)=>{ 
+
+    try {
+        let {email,oldPassword,newPassword,confirmPassword}= req.body;
+        const userId = req.params.id;
+        const user= await findWithId(User,userId);
+        
+        let isPassswordMatch = await bcrypt.compare(oldPassword,user.password); //await needed
+    
+        if(!isPassswordMatch){
+            throw createError(400,'old password is not correct');
+        }
+        
+        // const filter ={userId};
+        // const updates ={$set: {password: newPassword}};
+        // const updateOptions ={new:true};
+
+        const updateUser = await User.findByIdAndUpdate(
+            userId,
+            {password: newPassword},
+            {new:true}
+            ).select('-password');
+
+        if(!updateUser){
+            throw createError(400,'user was not updated successfully')
+            }
+
+    return successResponse(res,{
+            statusCode:200,
+            message:'user was updated successfully',
+            payload:{updateUser}
+           })
+    } catch (error) {
+        next(error)
+    }
+};
+
+const handleForgetPassword = async (req,res,next)=>{ 
+
+    try {
+        const {email}= req.body;
+        const userData = await User.findOne({email:email});
+
+        if(!userData){
+            throw createError(404,'Email is incorrect or you have not varified your email address. please register yourself first')
+        }
+
+        const token=createJSONWebToken(
+            {email},jwtResetPasswordKey,'10m');
+           console.log(token);
+    
+           //PREPARE EMAIL
+           const emailData = {
+            email,
+            subject:'Reset password Email',
+            html:`
+                <h2>Hello ${userData.name} !</h2> 
+                <p>please click here to <a href="${clientUrl}/api/users/reset-password/${token} target="_blank"">Reset your password<a></p>
+            `}
+    
+           //send email with nodemailer
+          try {
+            await emailWithNodeMail(emailData)
+    
+          } catch (emailError) {
+            next(createError(500,'faild to send reset password email'))
+            return;
+          }
+            return successResponse(res,{
+                statusCode:200,
+                message:`please go to your ${email} for resting  your password`,
+                payload:{token},
+               
+            })
+    } catch (error) {
+        next(error)
+    }
+}
+        module.exports ={getUsers,getUserById,
+                deleteUserById, 
+                processRegister,activateUserAccount,
+                updateUserById,handleBanUserById,
+                handleUnbanUserById,
+                handleUpdatePassword,handleForgetPassword};

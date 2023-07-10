@@ -7,6 +7,8 @@ const defaultImagePath =process.env.DEFAULT_USER_IMAGE_PATH ||'public/images/use
 
 const jwtActivationKey = process.env.JWT_ACTIVATION_KEY ||'ASDASDASSFEFDFDFGF';
 const jwtAccessKey = process.env.JWT_ACCESS_KEY ||'ASDASDASSFEFDFDFGF';
+const jwtResetPasswordKey = process.env.JWT_RESET_PASSWORD_KEY ||'ASDASDASSFEFDFDFGF';
+
 
 
 const smtpUsername =process.env.SMTP_USERNAME || '';
@@ -14,4 +16,5 @@ const smtpPassword = process.env.SMTP_PASSWORD || '';
 
 const clientUrl = process.env.CLIENT_URL;
 
-module.exports ={serverPort,mongoDbUrl,defaultImagePath,jwtActivationKey,smtpPassword,smtpUsername,clientUrl,jwtAccessKey};
+module.exports ={serverPort,mongoDbUrl,defaultImagePath,jwtActivationKey,
+    smtpPassword,smtpUsername,clientUrl,jwtAccessKey,jwtResetPasswordKey};

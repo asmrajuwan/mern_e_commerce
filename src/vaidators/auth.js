@@ -14,22 +14,22 @@ const validateUserRegistration =[
     .withMessage('email is required')
     .isEmail()
     .withMessage('Invalid email address'),
-    body("password")
-    .trim()
-    .notEmpty()
-    .withMessage('password is required')
-    .isLength({min:6})
-    .withMessage('password should be at least 6 characters long')
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[#$@!%&*?])[A-Za-z\d#$@!%&*?]{6,30}$/
-    )
-    .withMessage('password should be conatain at least one uppercase letter,one lowercase letter,one number and one special character'),
     body("address")
     .trim()
     .notEmpty()
     .withMessage('address is required')
     .isLength({min:3})
     .withMessage('adress should be at least 3 characters long'),
-    body("phone")
+    body("password")
+    .trim()
+    .notEmpty()
+    .withMessage('password is required')
+    .isLength({min:6})
+    .withMessage('password should be at least 6 characters long')
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/
+    )
+    .withMessage('password should be conatain at least one uppercase letter,one lowercase letter,one number and one special character'),
+   body("phone")
     .trim()
     .notEmpty()
     .withMessage('phone is required'),
@@ -58,10 +58,46 @@ const validateUserLogin =[
     .withMessage('password is required')
     .isLength({min:6})
     .withMessage('password should be at least 6 characters long')
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[#$@!%&*?])[A-Za-z\d#$@!%&*?]{6,30}$/
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/
     )
     .withMessage('password should be conatain at least one uppercase letter,one lowercase letter,one number and one special character'),
     ];
 
+    const validateUserPasswordUpdate =[
+        
+        body("oldPassword")
+        .trim()
+        .notEmpty()
+        .withMessage('old password is required')
+        .isLength({min:6})
+        .withMessage('old password should be at least 6 characters long')
+        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/
+        )
+        .withMessage('password should be conatain at least one uppercase letter,one lowercase letter,one number and one special character'),
+        body("newPassword")
+        .trim()
+        .notEmpty()
+        .withMessage('new password is required')
+        .isLength({min:6})
+        .withMessage('new password should be at least 6 characters long')
+        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/
+        )
+        .withMessage('password should be conatain at least one uppercase letter,one lowercase letter,one number and one special character'),
+        body('confirmPassword').custom((value,{req})=>{
+            if(value !== req.body.newPassword){
+            throw new Error('Pass did not match')   
+            }
+            return true
+        })
+    ];
 
-module.exports= {validateUserRegistration,validateUserLogin};
+    const validateUserForgetPassword =[
+        body("email")
+        .trim()
+        .notEmpty()
+        .withMessage('email is required')
+        .isEmail()
+        .withMessage('Invalid email address')];
+
+
+module.exports= {validateUserRegistration,validateUserLogin,validateUserPasswordUpdate,validateUserForgetPassword};

@@ -17,14 +17,14 @@ const handleLogin = async (req,res,next)=>{
             throw createError(404,'User does not exist with this id.Please register first')
         };
 
-        const isPassswordMatch =  bcrypt.compare(password, user.password); //await needed
+        const isPassswordMatch =  await bcrypt.compare(password, user.password); //await needed
         
         if(!isPassswordMatch){
             throw createError(401,'Email/password did not match');
         }
         
         if(user.isBanned){
-            throw createError(40,'You are banned.please contact authority');
+            throw createError(403,'You are banned.please contact authority');
         };
 
 
@@ -34,7 +34,7 @@ const handleLogin = async (req,res,next)=>{
             res.cookie('accessToken',accessToken,{
                 maxAge:15*60*1000, //15min
                 httpOnly: true,
-                // secure:true,
+                secure:true,
                 sameSite: 'none'
             });
 

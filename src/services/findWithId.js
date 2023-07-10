@@ -1,5 +1,5 @@
 const createHttpError = require("http-errors")
-const User = require("../models/userModel")
+//const User = require("../models/userModel")
 const  mongoose  = require("mongoose")
 
 const findWithId = async(Model,id, options={})=>{
