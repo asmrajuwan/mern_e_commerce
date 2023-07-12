@@ -115,6 +115,14 @@ const validateUserLogin =[
            
         ];
 
+        // const validateRefreshToken =[
+        //     body("token")
+        //     .trim()
+        //     .notEmpty()
+        //     .withMessage('token is required'),
+           
+        // ];
+
 
 module.exports= {validateUserRegistration,
     validateUserLogin,
