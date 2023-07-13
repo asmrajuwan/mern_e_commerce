@@ -30,9 +30,9 @@ const handleLogin = async (req,res,next)=>{
 
         const accessToken=createJSONWebToken
         ({user},
-            jwtAccessKey,'1m');
+            jwtAccessKey,'5m');
             res.cookie('accessToken',accessToken,{
-                maxAge:1*60*1000, //15min
+                maxAge:5*60*1000, //15min
                 httpOnly: true,
                 //secure:true,
                 sameSite: 'none'
@@ -48,7 +48,8 @@ const handleLogin = async (req,res,next)=>{
                 sameSite: 'none'
             });
 
-            const userWithOutPassword= await User.findOne({email}).select('-password');
+            const userWithOutPassword= user.toObject();
+            delete userWithOutPassword.password;
 
         
         return successResponse(res,{
@@ -65,7 +66,8 @@ const handleLogin = async (req,res,next)=>{
 
 const handleLogout = async (req,res,next)=>{
     try {
-        res.clearCookie('accessToken')
+        res.clearCookie('accessToken');
+        res.clearCookie('refreshToken');
         
         return successResponse(res,{
             statusCode:200,
@@ -89,9 +91,9 @@ const handleRefreshToken = async (req,res,next)=>{
 
         const accessToken=createJSONWebToken
         (decodedToken.user,
-            jwtAccessKey,'1m');
+            jwtAccessKey,'5m');
             res.cookie('accessToken',accessToken,{
-                maxAge:1*60*1000, //15min
+                maxAge:5*60*1000, //15min
                 httpOnly: true,
                 //secure:true,
                 sameSite: 'none'
@@ -130,4 +132,8 @@ const handleProtectedRoute = async (req,res,next)=>{
     }
 }
 
-module.exports ={handleLogin,handleLogout,handleRefreshToken,handleProtectedRoute} 
+module.exports ={handleLogin,
+                handleLogout,
+                handleRefreshToken,
+                handleProtectedRoute
+                } 

@@ -36,7 +36,7 @@ const getUsers= async(req,res,next)=>{
 
         const count = await User.find(filter).countDocuments();
 
-        if(!users) throw createError(404,'no users found');
+        if(!users || users.length === 0) throw createError(404,'no users found');
        return successResponse(res,{
         statusCode:200,
         message:'user profile is returned',
@@ -81,7 +81,7 @@ const deleteUserById = async (req,res,next)=>{
         const id = req.params.id;
         const options ={password:0}
 
-        const user = await findWithId(User,id,options);
+        await findWithId(User,id,options);
         
         // const userimagePath =user.image;
 
@@ -151,8 +151,6 @@ const processRegister = async (req,res,next)=>{
         return successResponse(res,{
             statusCode:200,
             message:`please go to your ${email} for completing your reg process`,
-            payload:{token,imageBUfferString},
-           
         })
     } catch (error) {
         
@@ -165,13 +163,13 @@ const activateUserAccount = async (req,res,next)=>{
       const token =req.body.token;
       if (!token) throw createError(404,"token not found");
         
-      
       try {
         const decoded = jwt.verify(token,jwtActivationKey);
         if (!decoded) throw createError(401,"unable to verify user");
 
         const userExists = await User.exists({email:decoded.email});
-       if(userExists) {
+        
+        if(userExists) {
         throw createError(409,'user with this email already registered')
        }
         
@@ -208,12 +206,12 @@ const updateUserById = async (req,res,next)=>{
             context:'query'}
             
             let updates ={};
-
-            for(let key in req.body){
-                if(['name','password','phone','address'].includes(key)){
+            const allowedFields = ['name','password','phone','address'];
+            for(const key in req.body){
+                if(allowedFields.includes(key)){
                     updates[key]=req.body[key];
                 }
-                else if(['email'].includes(key)){
+                else if(key ==='email'){
                     throw createError(400,'email cant be updated')
                 }
             }
@@ -322,7 +320,7 @@ const handleUpdatePassword = async (req,res,next)=>{
         let isPassswordMatch = await bcrypt.compare(oldPassword,user.password); //await needed
     
         if(!isPassswordMatch){
-            throw createError(400,'old password is not correct');
+            throw createError(400,'old password is incorrect');
         }
         
         // const filter ={userId};
@@ -382,7 +380,7 @@ const handleForgetPassword = async (req,res,next)=>{
           }
             return successResponse(res,{
                 statusCode:200,
-                message:`please go to your ${email} for resting  your password`,
+                message:`Please go to your ${email} to reset  your password`,
                 payload:{token},
                
             })
@@ -396,7 +394,7 @@ const handleResetPassword = async (req,res,next)=>{
         const {token,password} = req.body;
         const decoded =jwt.verify(token,jwtResetPasswordKey);
         if(!decoded){
-            throw createError(400,'invalid or expired token')
+            throw createError(400,'Invalid or expired token')
         }
         const filter ={email: decoded.email};
         const update ={password: password};
@@ -408,13 +406,13 @@ const handleResetPassword = async (req,res,next)=>{
             ).select('-password');
 
         if(!updateUser){
-            throw createError(400,'password reset failed')
+            throw createError(400,'Password reset failed')
             }
 
 
     return successResponse(res,{
             statusCode:200,
-            message:'password reset successfully',
+            message:'Password reset successfully',
             
            })
     } catch (error) {
@@ -422,11 +420,14 @@ const handleResetPassword = async (req,res,next)=>{
     }
 };
 
-        module.exports ={getUsers,getUserById,
-                deleteUserById, 
-                processRegister,activateUserAccount,
-                updateUserById,handleBanUserById,
-                handleUnbanUserById,
-                handleUpdatePassword,
-                handleForgetPassword,
-                handleResetPassword};
+        module.exports ={getUsers,
+                    getUserById,
+                    deleteUserById, 
+                    processRegister,
+                    activateUserAccount,
+                    updateUserById,
+                    handleBanUserById,
+                    handleUnbanUserById,
+                    handleUpdatePassword,
+                    handleForgetPassword,
+                    handleResetPassword};
