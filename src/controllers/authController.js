@@ -6,6 +6,7 @@ const bcrypt = require('bcryptjs');
 
 const { createJSONWebToken } = require('../helpers/jsonwebtoken');
 const { jwtAccessKey, jwtRefreshKey } = require('../secret');
+const { setAccessTokenCoolie, setRefershTokenCoolie } = require('../helpers/cookie');
 
 const handleLogin = async (req,res,next)=>{
     try {
@@ -17,7 +18,7 @@ const handleLogin = async (req,res,next)=>{
             throw createError(404,'User does not exist with this id.Please register first')
         };
 
-        const isPassswordMatch =  await bcrypt.compare(password, user.password); //await needed
+        const isPassswordMatch = bcrypt.compare(password, user.password); //await needed
         
         if(!isPassswordMatch){
             throw createError(401,'Email/password did not match');
@@ -26,32 +27,18 @@ const handleLogin = async (req,res,next)=>{
         if(user.isBanned){
             throw createError(403,'You are banned.please contact authority');
         };
-
-
+        
         const accessToken=createJSONWebToken
-        ({user},
-            jwtAccessKey,'5m');
-            res.cookie('accessToken',accessToken,{
-                maxAge:5*60*1000, //15min
-                httpOnly: true,
-                //secure:true,
-                sameSite: 'none'
-            });
+           ({user},jwtAccessKey,'5m');
+            setAccessTokenCoolie(res,accessToken)
+            
+        const refreshToken=createJSONWebToken
+           ({user},jwtRefreshKey,'7d');
+            setRefershTokenCoolie(res,refreshToken);
 
-            const refreshToken=createJSONWebToken
-        ({user},
-            jwtRefreshKey,'7d');
-            res.cookie('refreshToken',refreshToken,{
-                maxAge:7*24*60*60*1000, //7 days
-                httpOnly: true,
-                //secure:true,
-                sameSite: 'none'
-            });
-
-            const userWithOutPassword= user.toObject();
+        const userWithOutPassword= user.toObject();
             delete userWithOutPassword.password;
 
-        
         return successResponse(res,{
             statusCode:200,
             message:'user logged in successfully',
@@ -92,12 +79,14 @@ const handleRefreshToken = async (req,res,next)=>{
         const accessToken=createJSONWebToken
         (decodedToken.user,
             jwtAccessKey,'5m');
-            res.cookie('accessToken',accessToken,{
-                maxAge:5*60*1000, //15min
-                httpOnly: true,
-                //secure:true,
-                sameSite: 'none'
-            });
+          
+          setAccessTokenCoolie(res,accessToken);
+            // res.cookie('accessToken',accessToken,{
+            //     maxAge:5*60*1000, //15min
+            //     httpOnly: true,
+            //     //secure:true,
+            //     sameSite: 'none'
+            // });
 
         return successResponse(res,{
             statusCode:200,

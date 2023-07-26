@@ -1,12 +1,12 @@
 const nodemailer = require("nodemailer");
 const { smtpUsername, smtpPassword } = require("../secret");
+const logger = require("../controllers/loggerController");
 
 const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 587,
     secure: false,//true for 465 port
     auth: {
-      // TODO: replace `user` and `pass` values from <https://forwardemail.net>
       user: smtpUsername,
       pass: smtpPassword
     }
@@ -23,9 +23,9 @@ const transporter = nodemailer.createTransport({
         };
     
         const info = await transporter.sendMail(mailOptions);
-        console.log('Message sent: %s',info.response)
+        logger.log('info','Message sent: %s',info.response)
     } catch (error) {
-        console.error('error occurd:', error);
+        logger.log('error','error occurd:', error);
         throw error;
         
     }

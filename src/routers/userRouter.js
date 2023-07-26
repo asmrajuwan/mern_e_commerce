@@ -1,10 +1,26 @@
 const express = require('express');
 const { router } = require('../app');
-const { getUsers,getUserById, deleteUserById, processRegister, activateUserAccount, updateUserById, handleBanUserById, handleUnbanUserById, handleUpdatePassword, handleForgetPassword, handleResetPassword } = require('../controllers/userController');
+const { getUsers,
+    getUserById,
+    deleteUserById,
+    processRegister,
+    activateUserAccount,
+    updateUserById,
+    handleBanUserById,
+    handleUnbanUserById,
+    handleUpdatePassword,
+    handleForgetPassword,
+    handleResetPassword } = require('../controllers/userController');
+
 const upload = require('../middlewares/uploadFile');
-const { validateUserRegistration, validateUserPasswordUpdate, validateUserForgetPassword, validateUserResetPassword } = require('../vaidators/auth');
+const { validateUserRegistration,
+    validateUserPasswordUpdate,
+    validateUserForgetPassword,
+    validateUserResetPassword } = require('../vaidators/auth');
 const runValidation = require('../vaidators');
-const {isLoggedIn, isLoggedOut, isAdmin} = require('../middlewares/auth');
+const {isLoggedIn,
+    isLoggedOut, 
+    isAdmin} = require('../middlewares/auth');
 const userRouter = express.Router();
 
 userRouter.post('/process-register',upload.single("image"),isLoggedOut,validateUserRegistration,runValidation,  processRegister);
@@ -19,9 +35,5 @@ userRouter.put('/ban-user/:id([0-9a-fA-F]{24})',isLoggedIn,isAdmin,handleBanUser
 userRouter.put('/unban-user/:id([0-9a-fA-F]{24})',isLoggedIn,isAdmin,handleUnbanUserById);
 userRouter.put('/update-password/:id([0-9a-fA-F]{24})',validateUserPasswordUpdate,runValidation,isLoggedIn,handleUpdatePassword);
 userRouter.post('/forget-password/',validateUserForgetPassword,runValidation,handleForgetPassword);
-
-
-
-
 
 module.exports =userRouter;
