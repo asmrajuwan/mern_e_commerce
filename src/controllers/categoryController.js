@@ -3,7 +3,7 @@ const createError = require('http-errors');
 
 const { successResponse } = require("./responseController");
 
-const { createCategory,  getCategories, getCategory, updateCategory } = require('../services/categoryService');
+const { createCategory,  getCategories, getCategory, updateCategory, deleteCategory } = require('../services/categoryService');
 
 const handleCreateCategory = async (req,res,next)=>{
     try {
@@ -74,7 +74,30 @@ const handleUpdateCategory = async (req,res,next)=>{
         next(error)
     };
 };
+
+const handleDeleteCategory = async (req,res,next)=>{
+    try {
+       
+       const {slug} = req.params;
+       
+
+      const result = await deleteCategory(slug);
+      
+      if(!result){
+        throw createError(404,'No category was found ')
+      }  
+
+    return successResponse(res,{
+            statusCode:200,
+            message:'category deleted successfully ',
+           // payload: updatedCategory
+        })
+    } catch (error) {
+        next(error)
+    };
+};
 module.exports ={handleCreateCategory,
         handleGetCategories,
         handleGetCategory,
-        handleUpdateCategory}
+        handleUpdateCategory,
+    handleDeleteCategory}
