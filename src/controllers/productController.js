@@ -3,7 +3,7 @@ const slugify = require('slugify')
 const { successResponse } = require("./responseController");
 const { findWithId } = require("../services/findWithId");
 const Product = require("../models/productModel");
-const { createProduct, getProducts } = require("../services/productService");
+const { createProduct, getProducts, getProduct, deleteProduct } = require("../services/productService");
 
 const handleCreateProduct = async (req,res,next)=>{
     try {
@@ -64,4 +64,43 @@ const handleGetProducts = async (req,res,next)=>{
     }
 };
 
-module.exports ={handleCreateProduct,handleGetProducts};
+const handleGetProduct = async (req,res,next)=>{
+    try {
+       
+        const {slug} = req.params;
+
+        const product = await getProduct(slug)
+       
+        return successResponse(res,{
+            statusCode:200,
+            message:'returned single  product',
+             payload: {product}
+        })
+    } catch (error) {
+        
+        next(error)
+    }
+};
+const handleDeleteProduct = async (req,res,next)=>{
+    try {
+       
+        const {slug} = req.params;
+
+        const product = await deleteProduct(slug)
+       
+        return successResponse(res,{
+            statusCode:200,
+            message:'product deleted',
+             
+        })
+    } catch (error) {
+        
+        next(error)
+    }
+};
+
+module.exports ={
+    handleCreateProduct,
+    handleGetProducts,
+    handleGetProduct,
+    handleDeleteProduct};
