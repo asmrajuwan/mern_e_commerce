@@ -3,7 +3,7 @@ const slugify = require('slugify')
 const { successResponse } = require("./responseController");
 const { findWithId } = require("../services/findWithId");
 const Product = require("../models/productModel");
-const { createProduct, getProducts, getProduct, deleteProduct } = require("../services/productService");
+const { createProduct, getProducts, getProduct, deleteProduct, updateProductBySlug } = require("../services/productService");
 
 const handleCreateProduct = async (req,res,next)=>{
     try {
@@ -99,8 +99,45 @@ const handleDeleteProduct = async (req,res,next)=>{
     }
 };
 
+const handleUpdateProduct = async (req,res,next)=>{ 
+    try {
+        const {slug} = req.params;
+
+        const updateOptions ={new: true, runValidators: true,
+            context:'query'}
+            
+            let updates ={};
+            
+            const allowedFields = ['name','description','price','sold','quantity','shipping'];
+
+            for (const key in req.body){
+                if(allowedFields.includes(key)){
+                    updates[key]=req.body[key];
+                }
+                // else if(key ==='email'){
+                //     throw createError(400,'email cant be updated')
+                // }
+            }
+
+            const image = req.file;
+
+            const updatedProduct = await updateProductBySlug(slug,updates,image,updateOptions)
+
+    return successResponse(res,{
+            statusCode:200,
+            message:'Product is updated successfully',
+            payload:updatedProduct,
+           
+        })
+    } catch (error) {
+        
+        next(error)
+    }
+}
+
 module.exports ={
     handleCreateProduct,
     handleGetProducts,
     handleGetProduct,
-    handleDeleteProduct};
+    handleDeleteProduct,
+    handleUpdateProduct}

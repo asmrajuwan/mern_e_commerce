@@ -65,8 +65,33 @@ const deleteProduct = async (slug)=>{
     return {product};
 };
 
+const updateProductBySlug = async (slug,updates,image,updateOptions)=>{
+    
+    if(updates.name){
+                updates.slug =slugify(updates.name);
+            }
+    if(image){
+        if(image.size>1024*1024*2){
+            throw createError(400,'Image file is too large.it must be less then 2mb')
+    } 
+    updates.image= image.buffer.toString('base64');
+}
+
+
+
+    const updatedProduct = await Product.findOneAndUpdate(
+    {slug}, updates, updateOptions)
+
+    if(!updatedProduct){
+        
+            throw createError(404,'user with this id does not exist')
+    
+    }
+    return updatedProduct
+
+};
 
 
 
 
-module.exports ={createProduct,getProducts,getProduct,deleteProduct}
+module.exports ={createProduct,getProducts,getProduct,deleteProduct,updateProductBySlug}
