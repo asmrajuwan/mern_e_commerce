@@ -1,54 +1,67 @@
 const createError = require("http-errors");
 const User = require("../models/userModel");
+const deleteImage = require("../helpers/deleteImageHelper");
 
 const findUsers = async (search, limit, page) => {
     try {
         const searchRegExp = new RegExp(".*" + search + ".*", "i");
-    const filter = {
-        isAdmin: { $ne: true },
-        $or: [
-            { name: { $regex: searchRegExp } },
-            { email: { $regex: searchRegExp } },
-            { phone: { $regex: searchRegExp } },
-        ],
-    };
+        const filter = {
+            isAdmin: { $ne: true },
+            $or: [
+                { name: { $regex: searchRegExp } },
+                { email: { $regex: searchRegExp } },
+                { phone: { $regex: searchRegExp } },
+            ],
+        };
 
-    const options = { password: 0 };
+        const options = { password: 0 };
 
-    const users = await User.find(filter, options)
-        .limit(limit)
-        .skip((page - 1) * limit);
+        const users = await User.find(filter, options)
+            .limit(limit)
+            .skip((page - 1) * limit);
 
-    const count = await User.find(filter).countDocuments();
+        const count = await User.find(filter).countDocuments();
 
-    if (!users || users.length === 0) throw createError(404, "no users found");
-   
-    return {
-        users,
-        pagination: {
-            totalPages: Math.ceil(count / limit),
-            currentPage: page,
-            previousPage: page - 1 > 0 ? page - 1 : null,
-            nextPage:
-                page + 1 <= Math.ceil(count / limit) ? page + 1 : null,
-        },
-    }
-    
-    
+        if (!users || users.length === 0)
+            throw createError(404, "no users found");
+
+        return {
+            users,
+            pagination: {
+                totalPages: Math.ceil(count / limit),
+                currentPage: page,
+                previousPage: page - 1 > 0 ? page - 1 : null,
+                nextPage:
+                    page + 1 <= Math.ceil(count / limit) ? page + 1 : null,
+            },
+        };
     } catch (error) {
         throw error;
     }
 };
 
-const findUserById = async (id,options={})=>{
+const findUserById = async (id, options = {}) => {
     try {
-        const user = await User.findById(id,options)
-        if(!user) throw createError(404,'user is not found')
+        const user = await User.findById(id, options);
+        if (!user) throw createError(404, "user is not found");
         return user;
+    } catch (error) {}
+};
+
+const deleteAUserById = async (id, options = {}) => {
+    try {
+        const user = await User.findByIdAndDelete({
+            _id: id,
+            isAdmin: false,
+        });
+
+        if (user && user.image) {
+            await deleteImage(user.image);
+        }
     } catch (error) {
-        
+       
     }
-}
+};
 const handleUserAction = async (action, userId) => {
     try {
         let update;
@@ -86,4 +99,4 @@ const handleUserAction = async (action, userId) => {
     }
 };
 
-module.exports = { handleUserAction, findUsers,findUserById };
+module.exports = { handleUserAction, findUsers, findUserById, deleteAUserById };

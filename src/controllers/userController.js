@@ -18,7 +18,12 @@ const bcrypt = require("bcryptjs");
 const checkUserExists = require("../helpers/checkUserExists");
 const sendEmail = require("../helpers/sendEmail");
 const deleteImage = require("../helpers/deleteImageHelper");
-const { handleUserAction , findUsers, findUserById} = require("../services/userservice");
+const {
+    handleUserAction,
+    findUsers,
+    findUserById,
+    deleteAUserById,
+} = require("../services/userservice");
 
 const getUsers = async (req, res, next) => {
     try {
@@ -26,14 +31,14 @@ const getUsers = async (req, res, next) => {
         const page = Number(req.query.page) || 1;
         const limit = Number(req.query.limit) || 5;
 
-      const {users,pagination} = await findUsers(search,limit,page);
+        const { users, pagination } = await findUsers(search, limit, page);
 
         return successResponse(res, {
             statusCode: 200,
             message: "user profile is returned",
             payload: {
                 users: users,
-                pagination:pagination
+                pagination: pagination,
             },
         });
     } catch (error) {
@@ -63,20 +68,11 @@ const deleteUserById = async (req, res, next) => {
         const id = req.params.id;
         const options = { password: 0 };
 
-        const user = await findWithId(User, id, options);
+        await deleteAUserById(id, options);
 
         // const userimagePath =user.image;
 
         // deleteImage(userimagePath);
-
-        await User.findByIdAndDelete({
-            _id: id,
-            isAdmin: false,
-        });
-
-        if (user && user.image) {
-            await deleteImage(user.image);
-        }
 
         return successResponse(res, {
             statusCode: 200,
@@ -255,7 +251,7 @@ const handleManageUserstatusUserById = async (req, res, next) => {
         const userId = req.params.id;
         const action = req.body.action;
 
-        const successMessage = await handleUserAction(action,userId)
+        const successMessage = await handleUserAction(action, userId);
 
         return successResponse(res, {
             statusCode: 200,
