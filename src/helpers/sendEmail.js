@@ -11,4 +11,4 @@ const sendEmail = async(emailData)=>{
       };
 };
 
-exports.module= sendEmail;
+module.exports= sendEmail;

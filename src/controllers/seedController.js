@@ -3,7 +3,7 @@ const Product = require('../models/productModel');
 const User = require('../models/userModel')
 const seedUser = async(req,res,next) =>{
     try {
-    // deleting all existing users
+    // deleting all existing user
         await User.deleteMany({})
 
     // insert all existing users

@@ -26,14 +26,14 @@ const userSchema = new Schema({
         },
     password:{
         type: String,
-        required:[true,'user name is missing'],
+        required:[true,'Password name is missing'],
         minlength:[6,'password length must be min 6 character'],
         set:(v)=>bcrypt.hashSync(v, bcrypt.genSaltSync(10))
 
         },
     image:{
-        type: Buffer,
-        contentType:String,
+        type: String,
+        default:defaultImagePath,
         required:[true,'user image is required']
         },
     address:{ 
