@@ -18,7 +18,7 @@ const bcrypt = require("bcryptjs");
 const checkUserExists = require("../helpers/checkUserExists");
 const sendEmail = require("../helpers/sendEmail");
 const deleteImage = require("../helpers/deleteImageHelper");
-const { handleUserAction , findUsers} = require("../services/userservice");
+const { handleUserAction , findUsers, findUserById} = require("../services/userservice");
 
 const getUsers = async (req, res, next) => {
     try {
@@ -46,7 +46,7 @@ const getUserById = async (req, res, next) => {
         const id = req.params.id;
         const options = { password: 0 };
 
-        const user = await findWithId(User, id, options);
+        const user = await findUserById(User, id, options);
 
         return successResponse(res, {
             statusCode: 200,

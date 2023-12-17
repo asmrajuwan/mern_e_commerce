@@ -40,6 +40,15 @@ const findUsers = async (search, limit, page) => {
     }
 };
 
+const findUserById = async (id,options={})=>{
+    try {
+        const user = await User.findById(id,options)
+        if(!user) throw createError(404,'user is not found')
+        return user;
+    } catch (error) {
+        
+    }
+}
 const handleUserAction = async (action, userId) => {
     try {
         let update;
@@ -77,4 +86,4 @@ const handleUserAction = async (action, userId) => {
     }
 };
 
-module.exports = { handleUserAction, findUsers };
+module.exports = { handleUserAction, findUsers,findUserById };
